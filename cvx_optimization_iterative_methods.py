@@ -1,8 +1,10 @@
-from abc import ABC, abstractmethod
-from sympy import Symbol, parse_expr, solveset, S
 import sympy as sym
 import numpy as np
 import numpy.linalg as linear_algebra
+from abc import ABC, abstractmethod
+from sympy import Symbol, parse_expr, solveset, S
+from numpy.linalg import LinAlgError
+from mpmath.libmp.libhyper import NoConvergence
 
 
 class IterativeMethods(ABC):
@@ -73,7 +75,7 @@ class GradientDescentWithLineSearch(IterativeMethods):
         try:
             answers = solveset(h, t, domain=S.Reals)
         except Exception:
-            raise ValueError('Convergence to root failed.')
+            raise NoConvergence('Convergence to root failed.')
 
         if type(answers) != sym.sets.sets.FiniteSet:
             raise ValueError(
@@ -141,7 +143,10 @@ class NewtonMethod(IterativeMethods):
         self.iterations = 0
 
         while True:
-            t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
+            try:
+                t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
+            except LinAlgError:
+                raise LinAlgError('Invertible hessian matrix: ' + str(self.__hessian(iterative_point)))
             iterative_point = np.subtract(iterative_point, t)
             self.iterations += 1
             print('Optimal point: ', iterative_point, '\t', 'In iteration: ', self.iterations)
