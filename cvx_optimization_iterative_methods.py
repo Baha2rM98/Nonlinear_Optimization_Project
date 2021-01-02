@@ -56,12 +56,10 @@ class GradientDescentWithLineSearch(IterativeMethods):
 
     def __step_size_line_search(self, x_point: list, d_point: list) -> float:
         temp = list()
+
         for i in range(0, self._n):
             d_point[i] = str(d_point[i]) + '*t'
-            if not str(x_point[i]).__contains__('-'):
-                temp.append(d_point[i] + '+' + str(x_point[i]))
-            if str(x_point[i]).__contains__('-'):
-                temp.append(d_point[i] + str(x_point[i]))
+            temp.append(d_point[i] + '+' + str(x_point[i]))
 
         temp_func = str(self._function)
         for i in range(0, self._n):
@@ -80,11 +78,12 @@ class GradientDescentWithLineSearch(IterativeMethods):
         if type(answers) != sym.sets.sets.FiniteSet:
             raise ValueError(
                 'Unacceptable root in finding step size. The equation: '
-                + '\"' + str(h) + '\"' + ' has no root in Real numbers system.')
+                + '\"' + str(h) + '\"' + ' has no root in Real numbers system. \n '
+                                         'You must use Newton method instead of Gradient Descent.')
 
         return float(answers.args[0])
 
-    def gradient_descent(self, first_point: list, epsilon: float = 0.0000001) -> None:
+    def gradient_descent(self, first_point: list, epsilon: float = 0.000001) -> None:
         if first_point.__len__() != self._n:
             raise IndexError('Mismatched first point ' + str(first_point) + ' with variables ' + str(self._sym_symbols))
 
