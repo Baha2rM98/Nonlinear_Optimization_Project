@@ -29,14 +29,14 @@ class IterativeMethods(ABC):
             raise SyntaxError('Syntax error in function: ' + func)
 
     def _gradient(self, point: np.ndarray) -> np.ndarray:
-        symbol_value = dict()
+        symbol_val = dict()
         for i in range(0, point.size):
-            symbol_value[self._sym_symbols[i]] = point[i]
+            symbol_val[self._sym_symbols[i]] = point[i]
 
         gradient_vector = np.zeros((self._n,), dtype=float)
 
         for i in range(0, self._n):
-            temp_gradient_value = sym.diff(self._function, self._sym_symbols[i]).evalf(subs=symbol_value)
+            temp_gradient_value = sym.diff(self._function, self._sym_symbols[i]).evalf(subs=symbol_val)
             if type(temp_gradient_value) == sym.core.mul.Mul:
                 raise SyntaxError('The function contains unknown tokens.')
             gradient_vector[i] = temp_gradient_value
@@ -57,20 +57,20 @@ class GradientDescentWithLineSearch(IterativeMethods):
         super().__init__(symbols_list, function)
 
     def __step_size_line_search(self, x_point: list, d_point: list) -> float:
-        temp = list()
+        temp_t_based_vector = list()
 
         for i in range(0, self._n):
             d_point[i] = str(d_point[i]) + '*t'
-            temp.append(d_point[i] + '+' + str(x_point[i]))
+            temp_t_based_vector.append(d_point[i] + '+' + str(x_point[i]))
 
-        temp_func = str(self._function)
+        t_based_function = str(self._function)
         for i in range(0, self._n):
             s = str(self._sym_symbols[i])
-            if temp_func.__contains__(s):
-                temp_func = temp_func.replace(s, '(' + temp[i] + ')')
+            if t_based_function.__contains__(s):
+                t_based_function = t_based_function.replace(s, '(' + temp_t_based_vector[i] + ')')
 
         t = Symbol('t')
-        h = sym.diff(parse_expr(temp_func), t)
+        h = sym.diff(parse_expr(t_based_function), t)
 
         try:
             answers = solveset(h, t, domain=S.Reals)
@@ -116,19 +116,17 @@ class NewtonMethod(IterativeMethods):
         super().__init__(symbols_list, function)
 
     def __hessian(self, point: np.ndarray) -> np.ndarray:
-        symbol_vars = dict()
-        for i in range(0, point.size):
-            symbol_vars[self._sym_symbols[i]] = point[i]
-
+        symbol_val = dict()
         symbolic_gradient_vector = []
         for i in range(0, self._n):
+            symbol_val[self._sym_symbols[i]] = point[i]
             symbolic_gradient_vector.append(sym.diff(self._function, self._sym_symbols[i]))
 
         hessian_matrix = np.zeros((self._n, self._n), dtype=float)
 
         for i in range(0, self._n):
             for j in range(0, self._n):
-                temp_hessian_value = sym.diff(symbolic_gradient_vector[i], self._sym_symbols[j]).evalf(subs=symbol_vars)
+                temp_hessian_value = sym.diff(symbolic_gradient_vector[i], self._sym_symbols[j]).evalf(subs=symbol_val)
                 if type(temp_hessian_value) == sym.core.mul.Mul:
                     raise SyntaxError('The function contains unknown tokens.')
                 hessian_matrix[i][j] = temp_hessian_value
@@ -140,18 +138,20 @@ class NewtonMethod(IterativeMethods):
             raise IndexError('Mismatched first point ' + str(first_point) + ' with variables ' + str(self._sym_symbols))
 
         iterative_point = np.array(first_point)
+        try:
+            t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
+        except LinAlgError:
+            raise LinAlgError('Invertible hessian matrix: ' + str(self.__hessian(iterative_point)))
         self.iterations = 0
 
-        while True:
+        while linear_algebra.norm(t) > epsilon:
+            iterative_point = np.subtract(iterative_point, t)
             try:
                 t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
             except LinAlgError:
                 raise LinAlgError('Invertible hessian matrix: ' + str(self.__hessian(iterative_point)))
-            iterative_point = np.subtract(iterative_point, t)
             self.iterations += 1
             print('Optimal point: ', iterative_point, '\t', 'In iteration: ', self.iterations)
-            if linear_algebra.norm(t) < epsilon:
-                break
 
         opt_symbol_value = dict()
         for i in range(0, self._n):
