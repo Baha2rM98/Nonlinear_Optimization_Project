@@ -31,7 +31,7 @@ while True:
         print('\n')
 
     if option.__eq__('2'):
-        print('Newton method with line search:\n')
+        print('Newton method:\n')
         print('Enter the number of function\'s variable:')
         n = int(input())
         if n < 1:
