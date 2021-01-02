@@ -103,7 +103,7 @@ class GradientDescentWithLineSearch(IterativeMethods):
         for i in range(0, self._n):
             opt_symbol_value[self._sym_symbols[i]] = iterative_point[i]
 
-        print('Optimal value: ' + str(self._function.evalf(subs=opt_symbol_value)))
+        print('Finished -> [Optimal value: ' + str(self._function.evalf(subs=opt_symbol_value)) + ']')
 
 
 class NewtonMethod(IterativeMethods):
@@ -152,4 +152,4 @@ class NewtonMethod(IterativeMethods):
         for i in range(0, self._n):
             opt_symbol_value[self._sym_symbols[i]] = iterative_point[i]
 
-        print('Optimal value: ' + str(self._function.evalf(subs=opt_symbol_value)))
+        print('Finished -> [Optimal value: ' + str(self._function.evalf(subs=opt_symbol_value)) + ']')
