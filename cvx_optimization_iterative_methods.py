@@ -85,7 +85,7 @@ class GradientDescentWithLineSearch(IterativeMethods):
 
         return float(answers.args[0])
 
-    def gradient_descent(self, first_point: list, epsilon: float = 0.000001) -> None:
+    def gradient_descent(self, first_point: list, epsilon: float = 0.00000001) -> None:
         if first_point.__len__() != self._n:
             raise IndexError('Mismatched first point ' + str(first_point) + ' with variables ' + str(self._sym_symbols))
 
@@ -139,15 +139,17 @@ class NewtonMethod(IterativeMethods):
 
         iterative_point = np.array(first_point)
         try:
-            t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
+            grad = self._gradient(iterative_point)
+            newton_direction = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), grad)
         except LinAlgError:
             raise LinAlgError('Invertible hessian matrix: ' + str(self.__hessian(iterative_point)))
         self.iterations = 0
 
-        while linear_algebra.norm(t) > epsilon:
-            iterative_point = np.subtract(iterative_point, t)
+        while linear_algebra.norm(grad) > epsilon:
+            iterative_point = np.subtract(iterative_point, newton_direction)
             try:
-                t = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), self._gradient(iterative_point))
+                grad = self._gradient(iterative_point)
+                newton_direction = np.matmul(linear_algebra.inv(self.__hessian(iterative_point)), grad)
             except LinAlgError:
                 raise LinAlgError('Invertible hessian matrix: ' + str(self.__hessian(iterative_point)))
             self.iterations += 1
