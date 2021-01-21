@@ -117,7 +117,7 @@ class NewtonMethod(IterativeMethods):
 
     def __hessian(self, point: np.ndarray) -> np.ndarray:
         symbol_val = dict()
-        symbolic_gradient_vector = []
+        symbolic_gradient_vector = list()
         for i in range(0, self._n):
             symbol_val[self._sym_symbols[i]] = point[i]
             symbolic_gradient_vector.append(sym.diff(self._function, self._sym_symbols[i]))
